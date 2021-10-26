@@ -1,9 +1,7 @@
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+
 
 /**
  * @author tim
@@ -24,92 +22,98 @@ import java.util.Map;
 public class Formula {
 
     /**
-     * 内置函数
+     * 预内置函数
+     * 可增加Lodash之类的引用
      */
-    static String addjs = "" +
+    static String ADD_JS = "" +
             "function round(a,b){return Math.round(a+b)}\n" +
             "function floor(a,b){return Math.floor(a+b)}\n" +
             "function ceil(a,b){return Math.ceil(a+b)}\n";
+    /**
+     * 简单标记，可直接替换
+     */
+    static String[][] SAMPLE_TAGS = {
+            {"如果", " if( "},
+            {"那么", " ) "},
+            {"否则", " else "},
+            {"或者", " || "},
+            {"并且", " && "},
+            {"取最小", "Math.min"},
+            {"取最大", "Math.max"},
+            {"四舍五入进位", "round"},
+            {"向上进位", "ceil"},
+            {"向下进位", "floor"}
+    };
 
-    static String runjs(String js) {
+
+    /**
+     * 运行JS，返回结果
+     */
+    static String runs(String js) {
         String result = "";
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         ScriptEngine scriptEngine = scriptEngineManager.getEngineByName("javascript");
         try {
             //先运行内置函数
-            scriptEngine.eval(addjs);
+            scriptEngine.eval(ADD_JS);
             result = scriptEngine.eval(js).toString();
         } catch (ScriptException e) {
             e.printStackTrace();
         } finally {
             System.out.println("\n\n===> JS START" + js);
             System.out.println("<=== JS END\n\n");
-            return result;
         }
+        return result;
 
     }
 
+    /**
+     * 无参数执行
+     */
     static String eval(String formulaStr) {
-        String result = parse(formulaStr);
-        return runjs(result);
+        String result = formulaStr;
+        result = parse2js(result);
+        return runs(result);
     }
 
-    static String eval(Map<String, String> params, String formulaStr) {
-        String result = parse(params, formulaStr);
-        return runjs(result);
-    }
-
-    static String parse(Map<String, String> params, String formulaStr) {
+    /**
+     * 带参数执行
+     */
+    static String eval(String[][] params, String formulaStr) {
         String result = formulaStr;
         result = parseParams(params, result);
         result = parse2js(result);
-        return result;
+        return runs(result);
     }
 
-    static String parse(String formulaStr) {
-        String result = formulaStr;
-        result = parse2js(result);
-        return result;
-    }
 
-    static String parseParams(Map<String, String> params, String formulaStr) {
+    /**
+     * 翻译参数
+     */
+    static String parseParams(String[][] params, String formulaStr) {
         String result = formulaStr;
-        Iterator it = params.entrySet().iterator();
         System.out.println("\n\n =====> PARAMS START");
-        while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-            result = result.replaceAll(entry.getKey().toString(), "'" + entry.getValue() + "'");
-            System.out.println("key = " + entry.getKey() + ", value = " + entry.getValue());
+        for (String[] param : params) {
+            if (param.length > 1) {
+                result = result.replaceAll(param[0], "'" + param[1] + "'");
+                System.out.println("key = " + param[0] + ", value = " + param[1]);
+            }
         }
         System.out.println("<===== PARAMS END \n\n");
         return result;
     }
 
+    /**
+     * 翻译成JS
+     */
     static String parse2js(String formulaStr) {
         String result = formulaStr;
-        // 如果
-        result = result.replaceAll("如果", " if( ");
-        //那么
-        result = result.replaceAll("那么", " ) ");
-        //否则
-        result = result.replaceAll("否则", " else ");
-        //返回
-        result = result.replaceAll("返回", " return ");
-        //或者
-        result = result.replaceAll("或者", " || ");
-        //并且
-        result = result.replaceAll("并且", " && ");
-        //min
-        result = result.replaceAll("取最小", "Math.min");
-        //max
-        result = result.replaceAll("取最大", "Math.max");
-        //四舍五入进位
-        result = result.replaceAll("四舍五入进位", "round");
-        //向上进位
-        result = result.replaceAll("向上进位", "ceil");
-        //向下进位
-        result = result.replaceAll("向下进位", "floor");
-
+        for (String[] tag : SAMPLE_TAGS) {
+            if (tag.length > 1) {
+                result = result.replaceAll(tag[0], tag[1]);
+            }
+        }
+        //TODO::增加复杂自定义标签逻辑
         return result;
     }
 

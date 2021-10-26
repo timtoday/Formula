@@ -39,3 +39,20 @@ public class FormulaTester {
 }
 
 ```
+
+```
+ =====> PARAMS START
+key = 重量, value = 100.6
+key = 体积, value = 0.1
+<===== PARAMS END 
+
+
+
+
+===> JS START if(  '100.6' > 100  )  round('100.6',1)
+ if(  '100.6' < 100  )  100
+<=== JS END
+
+
+101.0
+```
